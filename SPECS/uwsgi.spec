@@ -8,6 +8,8 @@ URL:            http://projects.unbit.it/uwsgi
 Source0:        http://projects.unbit.it/downloads/%{name}-%{version}.tar.gz
 Source1:        rhel6.ini
 Source2:        uwsgi.init
+Source3:        spinningfifo.c
+Source4:        uwsgiplugin.py
 Patch0:         uwsgi_trick_chroot_rpmbuild.patch
 Patch1:         uwsgi_fix_rpath.patch
 BuildRequires:  python2-devel, libxml2-devel, libuuid-devel, ruby, ruby-devel
@@ -37,64 +39,18 @@ This package contains the development header files and libraries
 for uWSGI extensions
 
 
-%package -n %{name}-plugin-cgi
-Summary:  uWSGI - CGI plugin for uWSGI
-Group:    System Environment/Daemons
-Requires: %{name}
-
-%description -n %{name}-plugin-cgi
-This package contains the CGI plugin used with uWSGI.
-
-
-%package -n %{name}-plugin-python
-Summary:  uWSGI - Plugin for Python support
-Group:    System Environment/Daemons
-Requires: python, %{name}
-
-%description -n %{name}-plugin-python
-This package contains the python plugin for uWSGI
-
-%package -n %{name}-plugin-rack
-Summary:  uWSGI - Plugin for Ruby rack support
-Group:    System Environment/Daemons
-Requires: ruby, %{name}
-
-%description -n %{name}-plugin-rack
-This package contains the Ruby rack plugin for uWSGI
-
-%package -n %{name}-plugin-psgi
-Summary:  uWSGI - Plugin for Perl PSGI support
-Group:    System Environment/Daemons
-Requires: perl, %{name}
-
-%package -n %{name}-plugin-http
-Summary:  uWSGI - Plugin for HTTP support
-Group:    System Environment/Daemons
-Requires: %{name}
-
-%package -n %{name}-plugin-corerouter
-Summary:  uWSGI - Plugin for corerouter
-Group:    System Environment/Daemons
-Requires: %{name}
-
-%description -n %{name}-plugin-psgi
-This package contains the Perl PSGI plugin for uWSGI
-
-%description -n %{name}-plugin-http
-This package contains the HTTP plugin for uWSGI
-
-%description -n %{name}-plugin-corerouter
-This package contains the corerouter plugin for uWSGI
-
 %prep
 %setup -q
 cp -p %{SOURCE1} buildconf/
+mkdir -p plugins/spinningfifo
+cp -p %{SOURCE3} plugins/spinningfifo/
+cp -p %{SOURCE4} plugins/spinningfifo/
 echo "plugin_dir = %{_libdir}/%{name}" >> buildconf/$(basename %{SOURCE1})
 %patch0 -p1
 %patch1 -p1
 
 %build
-CFLAGS="%{optflags}" python uwsgiconfig.py --build rhel6
+CFLAGS="%{optflags}" python2.7 uwsgiconfig.py --build rhel6
 
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/%{name}
@@ -137,28 +93,10 @@ fi
 %doc LICENSE README
 %attr(0755,uwsgi,uwsgi) %{_localstatedir}/log/%{name}
 %attr(0755,uwsgi,uwsgi) %{_localstatedir}/run/%{name}
+%{_libdir}/%{name}/spinningfifo_plugin.so
 
 %files -n %{name}-devel
 %{_includedir}/%{name}
-
-%files -n %{name}-plugin-cgi
-%dir %{_libdir}/%{name}
-%{_libdir}/%{name}/cgi_plugin.so
-
-%files -n %{name}-plugin-python
-%{_libdir}/%{name}/python_plugin.so
-
-%files -n %{name}-plugin-rack
-%{_libdir}/%{name}/rack_plugin.so
-
-%files -n %{name}-plugin-psgi
-%{_libdir}/%{name}/psgi_plugin.so
-
-%files -n %{name}-plugin-http
-%{_libdir}/%{name}/http_plugin.so
-
-%files -n %{name}-plugin-corerouter
-%{_libdir}/%{name}/corerouter_plugin.so
 
 %changelog
 * Thu Apr 8 2015 Michal Kubenka <mkubenka@gmail.com> - 2.0.10-2
