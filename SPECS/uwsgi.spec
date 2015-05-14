@@ -50,7 +50,7 @@ echo "plugin_dir = %{_libdir}/%{name}" >> buildconf/$(basename %{SOURCE1})
 %patch1 -p1
 
 %build
-CFLAGS="%{optflags}" python2.7 uwsgiconfig.py --build rhel6
+CFLAGS="%{optflags}" /usr/local/bin/python2.7 uwsgiconfig.py --build rhel6
 
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/%{name}
@@ -94,6 +94,7 @@ fi
 %attr(0755,uwsgi,uwsgi) %{_localstatedir}/log/%{name}
 %attr(0755,uwsgi,uwsgi) %{_localstatedir}/run/%{name}
 %{_libdir}/%{name}/spinningfifo_plugin.so
+%{_libdir}/%{name}/stats_pusher_mongodb_plugin.so
 
 %files -n %{name}-devel
 %{_includedir}/%{name}
