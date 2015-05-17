@@ -1,10 +1,17 @@
+%define _prefix /usr/local
+%define _lib lib
+%define _pythonlibvers 2.7
+%define _libdir %{_prefix}/%{_lib}
+%define _sitepackagesdir %{_libdir}/python%{_pythonlibvers}/site-packages
+
 Name:           uwsgi
 Version:        2.0.10
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Fast, self-healing, application container server
 Group:          System Environment/Daemons
 License:        GPLv2
 URL:            http://projects.unbit.it/uwsgi
+Prefix:         %{_prefix}
 Source0:        http://projects.unbit.it/downloads/%{name}-%{version}.tar.gz
 Source1:        rhel6.ini
 Source2:        uwsgi.init
@@ -14,7 +21,7 @@ Patch0:         uwsgi_trick_chroot_rpmbuild.patch
 Patch1:         uwsgi_fix_rpath.patch
 BuildRequires:  python2-devel, libxml2-devel, libuuid-devel, ruby, ruby-devel
 BuildRequires:  libyaml-devel, perl-devel, pcre-devel, perl-ExtUtils-Embed
-Requires: /bin/bash libboost_filesystem.so.1.57.0()(64bit) libboost_system.so.1.57.0()(64bit) libboost_thread.so.1.57.0()(64bit) libc.so.6()(64bit) libc.so.6(GLIBC_2.10)(64bit) libc.so.6(GLIBC_2.2.5)(64bit) libc.so.6(GLIBC_2.3)(64bit) libc.so.6(GLIBC_2.3.2)(64bit) libc.so.6(GLIBC_2.3.4)(64bit) libc.so.6(GLIBC_2.4)(64bit) libc.so.6(GLIBC_2.8)(64bit) libcrypt.so.1()(64bit) libcrypt.so.1(GLIBC_2.2.5)(64bit) libcrypto.so.10()(64bit) libcrypto.so.10(OPENSSL_1.0.1_EC)(64bit) libcrypto.so.10(libcrypto.so.10)(64bit) libdl.so.2()(64bit) libdl.so.2(GLIBC_2.2.5)(64bit) libgcc_s.so.1()(64bit) libgcc_s.so.1(GCC_3.0)(64bit) libm.so.6()(64bit) libm.so.6(GLIBC_2.2.5)(64bit) libmongoclient.so.1()(64bit) libpcre.so.0()(64bit) libpthread.so.0()(64bit) libpthread.so.0(GLIBC_2.2.5)(64bit) libpthread.so.0(GLIBC_2.4)(64bit) libssl.so.10()(64bit) libssl.so.10(libssl.so.10)(64bit) libutil.so.1()(64bit) libuuid.so.1()(64bit) libuuid.so.1(UUID_1.0)(64bit) libxml2.so.2()(64bit) libxml2.so.2(LIBXML2_2.4.30)(64bit) libxml2.so.2(LIBXML2_2.6.0)(64bit) libz.so.1()(64bit) libz.so.1(ZLIB_1.2.0)(64bit) rtld(GNU_HASH)
+Requires: /bin/bash libc.so.6()(64bit) libc.so.6(GLIBC_2.10)(64bit) libc.so.6(GLIBC_2.2.5)(64bit) libc.so.6(GLIBC_2.3)(64bit) libc.so.6(GLIBC_2.3.2)(64bit) libc.so.6(GLIBC_2.3.4)(64bit) libc.so.6(GLIBC_2.4)(64bit) libc.so.6(GLIBC_2.8)(64bit) libcrypt.so.1()(64bit) libcrypt.so.1(GLIBC_2.2.5)(64bit) libcrypto.so.10()(64bit) libcrypto.so.10(OPENSSL_1.0.1_EC)(64bit) libcrypto.so.10(libcrypto.so.10)(64bit) libdl.so.2()(64bit) libdl.so.2(GLIBC_2.2.5)(64bit) libm.so.6()(64bit) libm.so.6(GLIBC_2.2.5)(64bit) libpcre.so.0()(64bit) libpthread.so.0()(64bit) libpthread.so.0(GLIBC_2.2.5)(64bit) libpthread.so.0(GLIBC_2.4)(64bit) libssl.so.10()(64bit) libssl.so.10(libssl.so.10)(64bit) libutil.so.1()(64bit) libuuid.so.1()(64bit) libuuid.so.1(UUID_1.0)(64bit) libxml2.so.2()(64bit) libxml2.so.2(LIBXML2_2.4.30)(64bit) libxml2.so.2(LIBXML2_2.6.0)(64bit) libz.so.1()(64bit) libz.so.1(ZLIB_1.2.0)(64bit) rtld(GNU_HASH)
 Autoreq: 0
 
 %description
@@ -53,50 +60,27 @@ echo "plugin_dir = %{_libdir}/%{name}" >> buildconf/$(basename %{SOURCE1})
 
 %build
 CFLAGS="%{optflags}" /usr/local/bin/python2.7 uwsgiconfig.py --build rhel6
+/usr/local/bin/python2.7 /usr/local/lib/python2.7/compileall.py uwsgidecorators.py
 
 %install
-mkdir -p %{buildroot}%{_sysconfdir}/%{name}
-mkdir -p %{buildroot}%{_sbindir}
+mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_includedir}/%{name}
 mkdir -p %{buildroot}%{_libdir}/%{name}
-mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
-mkdir -p %{buildroot}%{_localstatedir}/run/%{name}
-%{__install} -p -m 0755 uwsgi %{buildroot}%{_sbindir}
-%{__install} -d -m 0755 %{buildroot}%{_initrddir}
-%{__install} -p -m 0755 %{SOURCE2} %{buildroot}%{_initrddir}/%{name}
+mkdir -p %{buildroot}%{_sitepackagesdir}
+%{__install} -p -m 0755 uwsgi %{buildroot}%{_bindir}
 %{__install} -p -m 0644 *.h %{buildroot}%{_includedir}/%{name}
 %{__install} -p -m 0755 *_plugin.so %{buildroot}%{_libdir}/%{name}
-
-%pre
-getent group uwsgi >/dev/null || groupadd -r uwsgi
-getent passwd uwsgi >/dev/null || \
-    useradd -r -g uwsgi -d '/etc/uwsgi' -s /sbin/nologin \
-    -c "uWSGI Service User" uwsgi
-
-%post
-/sbin/chkconfig --add uwsgi
-
-%preun
-if [ $1 -eq 0 ]; then
-    /sbin/service uwsgi stop >/dev/null 2>&1
-    /sbin/chkconfig --del uwsgi
-fi
-
-%postun
-if [ $1 -ge 1 ]; then
-    /sbin/service uwsgi condrestart >/dev/null 2>&1 || :
-fi
+%{__install} -p -m 0644 uwsgidecorators.py %{buildroot}%{_sitepackagesdir}
+%{__install} -p -m 0644 uwsgidecorators.pyc %{buildroot}%{_sitepackagesdir}
 
 %files
 %defattr(-,root,root)
-%{_sbindir}/%{name}
-%dir %{_sysconfdir}/%{name}
-%{_initrddir}/%{name}
+%{_bindir}/%{name}
 %doc LICENSE README
-%attr(0755,uwsgi,uwsgi) %{_localstatedir}/log/%{name}
-%attr(0755,uwsgi,uwsgi) %{_localstatedir}/run/%{name}
 %{_libdir}/%{name}/spinningfifo_plugin.so
-%{_libdir}/%{name}/stats_pusher_mongodb_plugin.so
+%{_sitepackagesdir}/uwsgidecorators.py
+%{_sitepackagesdir}/uwsgidecorators.pyc
+%{_sitepackagesdir}/uwsgidecorators.pyo
 
 %files -n %{name}-devel
 %{_includedir}/%{name}
